@@ -17,9 +17,13 @@ st.markdown(
       h3 {font-size: 1.0rem !important; font-weight: 600 !important; margin-top: 1.1rem !important;}
       .src {color: #666; font-size: 0.82rem; margin-bottom: 0.8rem;}
       .note {color: #555; font-size: 0.8rem; margin-top: -0.4rem;}
-      [data-testid="stTable"] table {font-size: 0.84rem;}
+      .toc {font-size: 0.86rem; line-height: 1.9; padding: 0.5rem 0.75rem; background: #f3f4f6;
+            border-radius: 4px; margin: 0.6rem 0 0.4rem 0;}
+      .toc a {color: #1f4e79; text-decoration: none; white-space: nowrap;}
+      .toc a:hover {text-decoration: underline;}
+      [data-testid="stTable"] table {font-size: 0.8rem;}
       [data-testid="stTable"] th {background: #f3f4f6; font-weight: 600;}
-      [data-testid="stTable"] td, [data-testid="stTable"] th {padding: 0.25rem 0.5rem !important;}
+      [data-testid="stTable"] td, [data-testid="stTable"] th {padding: 0.2rem 0.4rem !important;}
     </style>
     """,
     unsafe_allow_html=True,
@@ -253,23 +257,19 @@ def show(sec: core.Section):
         st.markdown(f'<div class="note">{sec.note}</div>', unsafe_allow_html=True)
 
 
-def group_of(title: str) -> int:
-    if title.startswith("Таблица А") or title.startswith("Таблица Б"):
-        return 2
-    if title.startswith("Таблица 1") and title[8:10] in ("13", "14", "15", "16"):
-        return 1
-    if title.startswith("Общие") or title.startswith("Таблица"):
-        return 0
-    return 3
+def short(title: str) -> str:
+    """'Таблица 13.1 — Суммарная …' -> '13.1'; прочие разделы — первые слова."""
+    if title.startswith("Таблица "):
+        return title.split(" — ")[0].replace("Таблица ", "")
+    return title.split(" (")[0].split(":")[0]
 
 
-groups = ["Таблицы 5.1–12.1", "Таблицы 13.1–16.2", "Приложения А, Б", "Расчеты и справочно"]
-tabs = st.tabs(groups)
-for gi, tab in enumerate(tabs):
-    with tab:
-        for s in sections:
-            if group_of(s.title) == gi:
-                show(s)
+links = " · ".join(f'<a href="#sec{i}">{short(s.title)}</a>' for i, s in enumerate(sections))
+st.markdown(f'<div class="toc"><b>Разделы:</b> {links}</div>', unsafe_allow_html=True)
+
+for i, s in enumerate(sections):
+    st.markdown(f'<div id="sec{i}"></div>', unsafe_allow_html=True)
+    show(s)
 
 st.divider()
 st.caption(core.SOURCES + " Значения прежних редакций показаны серым и носят справочный характер. "
